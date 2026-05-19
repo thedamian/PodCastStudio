@@ -126,15 +126,16 @@ async def main():
                     # Get user input
                     user_response = input(f"{Colors.CYAN}Your response: {Colors.RESET}").strip()
                     pending_responses = {event.request_id: user_response}
-                    
+
                     # If approved, save the script for later
                     if user_response in ["Yes", "yes"]:
                         final_script = event.data.generated_script
-                    
+
                     print(f"\n{Colors.YELLOW}Continuing workflow...{Colors.RESET}")
                     # Show loading for next step
                     show_loading("Processing")
                     loading_shown = True
+                    break  # Exit current stream; outer loop will resume with pending_responses
             
             # Workflow output (final)
             elif event.type == "output":
@@ -142,20 +143,31 @@ async def main():
                 if loading_shown:
                     clear_loading()
                     loading_shown = False
-                
+
                 print("\n")
                 print("=" * 60)
                 print(f"{Colors.BOLD}{Colors.GREEN}WORKFLOW COMPLETE{Colors.RESET}")
                 print("=" * 60)
-                
-                # Save to file
-                if final_script:
-                    output_file = "podcast.txt"
+
+                # Extract script from output event data if available, fall back to saved final_script
+                output_text = str(event.data) if event.data else ""
+                script_prefix = "Script approved! Final script:\n"
+                if script_prefix in output_text:
+                    script_to_save = output_text[output_text.index(script_prefix) + len(script_prefix):]
+                elif final_script:
+                    script_to_save = final_script
+                else:
+                    script_to_save = None
+
+                # Save to file using absolute path relative to this script's location
+                if script_to_save:
+                    output_file = Path(__file__).resolve().parent / "podcast.txt"
                     with open(output_file, "w", encoding="utf-8") as f:
-                        f.write(final_script)
+                        f.write(script_to_save)
                     print(f"\n{Colors.GREEN}✓ Script saved to {output_file}{Colors.RESET}")
-                    print(f"\n{Colors.GREEN}{event.data}{Colors.RESET}")
-                
+                else:
+                    print(f"\n{Colors.YELLOW}Warning: No script found to save.{Colors.RESET}")
+
                 workflow_complete = True
             
             # Workflow status changes
