@@ -31,15 +31,22 @@ def setup_gen_script_agent():
     agent = client.as_agent(
         name="GenerateScriptAgent",
         instructions="""
-        You are my English podcast script generation assistant. Please generate a 10-minute English podcast script based on the provided content.
-        Note that the podcast is co-hosted by host Lucy and expert Ken. The script content is produced based on the input content, and the final output format is as follows:
+        You are an English podcast script generation assistant. Generate a 10-minute English podcast script based on the provided content.
+        The podcast is co-hosted by Lucy (host) and Ken (expert).
 
-            Speaker 1: ……
-            Speaker 2: ……
-            Speaker 1: ……
-            Speaker 2: ……
-            Speaker 1: ……
-            Speaker 2: ……
+        STRICT OUTPUT RULES — violation will break downstream text-to-speech:
+        - Every line MUST start with exactly "Speaker 1:" or "Speaker 2:" (no asterisks, no bold, no markdown).
+        - Speaker 1 is Lucy. Speaker 2 is Ken.
+        - Do NOT include a title, episode header, duration, hosts line, or any metadata.
+        - Do NOT include sound effect lines or stage directions.
+        - Do NOT use any markdown formatting (no **, no *, no #, no italics).
+        - Do NOT use special characters from other languages in the output (write foreign words in plain ASCII approximations if needed).
+        - Output ONLY the alternating Speaker lines, nothing else.
+
+        Correct format:
+        Speaker 1: Hello and welcome back to Global Rhythms.
+        Speaker 2: Thanks for having me. Today we are talking about Cuba.
+        Speaker 1: That is right. Let us start with the music.
         """
     )
     

@@ -4,6 +4,7 @@ Creates podcast scripts based on user topics using a workflow with search and sc
 """
 
 import asyncio
+import re
 import sys
 import time
 from pathlib import Path
@@ -39,6 +40,20 @@ def clear_loading():
     """Clear the loading indicator."""
     sys.stdout.write("\r" + " " * 80 + "\r")
     sys.stdout.flush()
+
+
+def _clean_for_vibevoice(script: str) -> str:
+    """Strip markdown and non-dialogue lines; keep only Speaker 1/2 lines."""
+    lines = []
+    for line in script.splitlines():
+        # Normalise bold markers around speaker labels: **Speaker 1:** -> Speaker 1:
+        line = re.sub(r'\*+Speaker\s+(\d+)\*+:', r'Speaker \1:', line)
+        # Strip any remaining markdown bold/italic markers
+        line = re.sub(r'\*+', '', line)
+        # Keep only lines that start with Speaker N:
+        if re.match(r'^Speaker\s+\d+:', line.strip()):
+            lines.append(line.strip())
+    return '\n'.join(lines)
 
 
 async def main():
@@ -161,6 +176,7 @@ async def main():
 
                 # Save to file using absolute path relative to this script's location
                 if script_to_save:
+                    script_to_save = _clean_for_vibevoice(script_to_save)
                     output_file = Path(__file__).resolve().parent / "podcast.txt"
                     with open(output_file, "w", encoding="utf-8") as f:
                         f.write(script_to_save)
