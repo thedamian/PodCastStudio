@@ -5,7 +5,7 @@ from agent_framework import (
     Executor,
     AgentExecutorResponse,
     AgentExecutorRequest,
-    ChatMessage,
+    Message,
     Role,
     handler,
     response_handler,
@@ -61,13 +61,13 @@ class ReviewExecutor(Executor):
         else:
             # User did not approve - send message back to genscriptagent to regenerate
             # Create feedback message and send as AgentExecutorRequest
-            feedback_message = ChatMessage(
+            feedback_message = Message(
                 role=Role.USER,
-                text=f"The previous script was not accepted. User feedback: {user_input}. Please regenerate the script based on this feedback."
+                text=f"The previous script was not accepted. User feedback: {user_input}. Please regenerate the script based on this feedback.",
             )
             await ctx.send_message(
                 AgentExecutorRequest(messages=[feedback_message], should_respond=True),
-                target_id=self._genscript_agent_id
+                target_id=self._genscript_agent_id,
             )
 
 
@@ -83,8 +83,7 @@ review_executor = ReviewExecutor(id="review_executor", genscript_agent_id="gen_s
 # search_executor -> gen_script_executor -> review_executor
 # If not approved, review_executor -> gen_script_executor (loop back)
 workflow = (
-    WorkflowBuilder()
-    .set_start_executor(search_executor)
+    WorkflowBuilder(start_executor=search_executor)
     .add_edge(search_executor, gen_script_executor)
     .add_edge(gen_script_executor, review_executor)
     .add_edge(review_executor, gen_script_executor)  # Loop back for regeneration

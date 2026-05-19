@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_URL = os.getenv("OPENAI_BASE_URL", "http://127.0.0.1:1234/v1")
-MODEL_ID = os.getenv("OPENAI_MODEL_ID", "google/gemma-4-26b-a4b")
+MODEL_ID = os.getenv("OPENAI_MODEL", "google/gemma-4-26b-a4b")
 
 client = OpenAI(base_url=BASE_URL, api_key=os.getenv("OPENAI_API_KEY", "not-needed"))
 

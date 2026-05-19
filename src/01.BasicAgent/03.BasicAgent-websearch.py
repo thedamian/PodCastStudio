@@ -8,7 +8,7 @@ from openai import OpenAI
 load_dotenv()
 
 BASE_URL = os.getenv("OPENAI_BASE_URL")
-MODEL_ID = os.getenv("OPENAI_MODEL_ID")
+MODEL_ID = os.getenv("OPENAI_MODEL")
 
 client = OpenAI(base_url=BASE_URL, api_key=os.getenv("OPENAI_API_KEY", "not-needed"))
 

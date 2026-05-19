@@ -6,11 +6,14 @@ Creates podcast scripts based on user topics using a workflow with search and sc
 import asyncio
 import sys
 import time
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env from the project root (4 levels up from this file)
+load_dotenv(Path(__file__).resolve().parents[3] / ".env")
+
 from agent_framework import (
-    WorkflowOutputEvent,
-    RequestInfoEvent,
-    AgentRunUpdateEvent,
-    WorkflowStatusEvent,
+    WorkflowEvent,
     WorkflowRunState,
 )
 from workflow import workflow, ScriptApprovalRequest
@@ -67,16 +70,16 @@ async def main():
     while not workflow_complete:
         # Run or continue workflow
         if pending_responses:
-            stream = workflow.send_responses_streaming(pending_responses)
+            stream = workflow.run(responses=pending_responses, stream=True)
         else:
-            stream = workflow.run_stream(topic)
+            stream = workflow.run(topic, stream=True)
         
         pending_responses = None
         
         # Process events
         async for event in stream:
             # Agent response updates
-            if isinstance(event, AgentRunUpdateEvent):
+            if event.type == "data":
                 # Get agent name from executor_id
                 agent_name = event.executor_id
                 
@@ -91,21 +94,21 @@ async def main():
                     print(f"\n{Colors.BOLD}[{agent_name.upper()}]:{Colors.RESET}")
                     
                     # Show loading before first output
-                    if not event.data or not event.data.text:
+                    if not event.data or not hasattr(event.data, 'agent_response') or not event.data.agent_response.text:
                         show_loading(f"Waiting for {agent_name}")
                         loading_shown = True
                 
                 # Print agent response text in green
-                if event.data and event.data.text:
+                if event.data and hasattr(event.data, 'agent_response') and event.data.agent_response.text:
                     # Clear loading if shown
                     if loading_shown:
                         clear_loading()
                         loading_shown = False
                     
-                    print(f"{Colors.GREEN}{event.data.text}{Colors.RESET}", end="", flush=True)
+                    print(f"{Colors.GREEN}{event.data.agent_response.text}{Colors.RESET}", end="", flush=True)
             
             # Human approval request
-            elif isinstance(event, RequestInfoEvent):
+            elif event.type == "request_info":
                 if isinstance(event.data, ScriptApprovalRequest):
                     # Clear loading if shown
                     if loading_shown:
@@ -134,7 +137,7 @@ async def main():
                     loading_shown = True
             
             # Workflow output (final)
-            elif isinstance(event, WorkflowOutputEvent):
+            elif event.type == "output":
                 # Clear loading if shown
                 if loading_shown:
                     clear_loading()
@@ -156,10 +159,9 @@ async def main():
                 workflow_complete = True
             
             # Workflow status changes
-            elif isinstance(event, WorkflowStatusEvent):
-                if event.state == WorkflowRunState.IDLE:
-                    if not any(isinstance(e, WorkflowOutputEvent) for e in [event]):
-                        workflow_complete = True
+            elif event.type == "status":
+                if event.state in [WorkflowRunState.IDLE, WorkflowRunState.FAILED, WorkflowRunState.CANCELLED]:
+                    workflow_complete = True
     
     print("\nThank you for using Podcast Application!")
 

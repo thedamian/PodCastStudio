@@ -1,7 +1,13 @@
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env from the project root (3 levels up from this file)
+load_dotenv(Path(__file__).resolve().parents[3] / ".env")
+
 from workflow import workflow  # 🏗️ The travel plan workflow
 
 def main():
-    """Launch the travel workflow in DevUI."""
+    """Launch the podcast workflow in DevUI."""
     import logging
     """Launch the basic orkflow in DevUI."""
     from agent_framework.devui import serve
