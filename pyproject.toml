@@ -9,6 +9,8 @@ dependencies = [
     "agent-framework-core",
     "agent-framework-devui",
     "openai>=2.35.1",
+    "pydub>=0.25.1",
+    "python-dotenv>=1.2.2",
 ]
 
 [tool.uv.sources]

@@ -9,6 +9,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+.env
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -267,6 +268,7 @@ ServiceFabricBackup/
 *.rptproj.bak
 
 # SQL Server files
+uv.lock
 *.mdf
 *.ldf
 *.ndf
